@@ -276,7 +276,7 @@ export default function AuthCard() {
               <button
                 type="submit"
                 disabled={loading}
-                className={`flex items-center gap-2 py-3 px-8 ${
+                className={`flex items-center gap-2 py-3 px-8 cursor-pointer ${
                   loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#fb6a09] hover:bg-[#e55f08]'
                 } text-white font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#fb6a09] transition-colors`}
               >

@@ -136,13 +136,13 @@ export default function Navbar() {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2">
-            <button className="px-3 py-1 sm:px-4 sm:py-1 bg-[#fb6a09] text-white text-xs sm:text-sm rounded-lg hover:bg-[#e55f08] transition-colors">
+            <button className="px-3 py-1 sm:px-4 sm:py-1 bg-[#fb6a09] cursor-pointer text-white text-xs sm:text-sm rounded-lg hover:bg-[#e55f08] transition-colors">
               SELL
             </button>
-            <button className="p-1 sm:p-2 text-white hover:text-red-300 transition-colors">
+            <button className="p-1 sm:p-2 text-white hover:text-red-300 transition-colors cursor-pointer">
               <Heart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
             </button>
-            <button className="p-1 sm:p-2 text-white hover:text-blue-300 transition-colors">
+            <button className="p-1 sm:p-2 text-white hover:text-blue-300 transition-colors cursor-pointer">
               <User className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
             </button>
           </div>
@@ -181,7 +181,7 @@ export default function Navbar() {
               <div className="relative" ref={servicesRef}>
                 <button
                   onClick={() => setServicesOpen(!servicesOpen)}
-                  className="flex items-center gap-1 text-gray-700 text-sm font-medium border border-gray-200 bg-gray-50 px-3 py-1.5 rounded transition-all hover:border-gray-300 hover:bg-white"
+                  className="flex items-center gap-1 text-gray-700 text-sm font-medium border border-gray-200 bg-gray-50 px-3 py-1.5 rounded cursor-pointer transition-all hover:border-gray-300 hover:bg-white"
                 >
                   Services
                   <ChevronDown className={`w-4 h-4 transition-transform ${servicesOpen ? 'rotate-180' : ''}`} />
@@ -211,7 +211,7 @@ export default function Navbar() {
               <div className="relative" ref={buySellRef}>
                 <button
                   onClick={() => setBuySellOpen(!buySellOpen)}
-                  className="flex items-center gap-1 text-gray-700 text-sm font-medium border border-gray-200 bg-gray-50 px-3 py-1.5 rounded transition-all hover:border-gray-300 hover:bg-white"
+                  className="flex items-center gap-1 text-gray-700 text-sm font-medium border cursor-pointer border-gray-200 bg-gray-50 px-3 py-1.5 rounded transition-all hover:border-gray-300 hover:bg-white"
                 >
                   Buy/Sell
                   <ChevronDown className={`w-4 h-4 transition-transform ${buySellOpen ? 'rotate-180' : ''}`} />
@@ -256,7 +256,7 @@ export default function Navbar() {
               </div>
 
               <div className="relative">
-                <button className="p-1 text-gray-700 hover:text-gray-900 transition-colors border rounded">
+                <button className="p-1 text-gray-700 hover:text-gray-900 transition-colors border rounded cursor-pointer">
                   <MessageCircle className="w-5 h-5" />
                 </button>
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
@@ -264,7 +264,7 @@ export default function Navbar() {
                 </span>
               </div>
             </div>
-          </div>
+          </div>s
         </div>
       </nav>
     </>
