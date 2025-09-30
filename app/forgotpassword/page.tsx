@@ -65,7 +65,7 @@ export default function ForgotPassword() {
               </h2>
            
               <p className="mt-2 text-gray-600">
-                We've sent a verification code to your phone
+                Weve sent a verification code to your phone
               </p>
             </div>
 
@@ -112,8 +112,6 @@ export default function ForgotPassword() {
                   Verify Account
                 </button>
               </div>
-
-              
             </form>
           </div>
         </div>
