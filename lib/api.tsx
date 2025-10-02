@@ -89,11 +89,16 @@ class ApiClient {
     try {
       console.log(`🌐 Making API request to: ${url}`, config);
 
+      // Create abort controller with longer timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds
+
       const response = await fetch(url, {
         ...config,
-        // Add timeout to detect network issues faster
-        signal: AbortSignal.timeout(10000) // 10 second timeout
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       console.log(`📨 Response status: ${response.status}`);
 
@@ -113,7 +118,57 @@ class ApiClient {
 
       // Check both HTTP status AND API success flag
       if (!response.ok || (data && data.success === false)) {
-        const errorMessage = data.message || data.error || data.detail || `HTTP error! status: ${response.status}`;
+        // IMPROVED ERROR HANDLING - Handle object responses properly
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        
+        if (data) {
+          // Try different possible error message fields
+          if (typeof data.message === 'string') {
+            errorMessage = data.message;
+          } else if (typeof data.error === 'string') {
+            errorMessage = data.error;
+          } else if (typeof data.detail === 'string') {
+            errorMessage = data.detail;
+          } else if (data.message && typeof data.message === 'object') {
+            // If message is an object, stringify it
+            try {
+              errorMessage = JSON.stringify(data.message);
+            } catch {
+              errorMessage = 'Invalid error format';
+            }
+          } else if (data.error && typeof data.error === 'object') {
+            // If error is an object, stringify it
+            try {
+              errorMessage = JSON.stringify(data.error);
+            } catch {
+              errorMessage = 'Invalid error format';
+            }
+          } else if (data.errors && Array.isArray(data.errors)) {
+            // Handle array of errors
+            errorMessage = data.errors.map((err: any) => 
+              typeof err === 'string' ? err : JSON.stringify(err)
+            ).join(', ');
+          } else {
+            // Fallback: stringify the entire response data
+            try {
+              errorMessage = JSON.stringify(data);
+            } catch {
+              errorMessage = 'Unknown error occurred';
+            }
+          }
+        }
+
+        console.error('🚨 API Error Details:', {
+          status: response.status,
+          responseData: data,
+          extractedMessage: errorMessage
+        });
+
+        // Handle 401 specifically - clear auth token
+        if (response.status === 401) {
+          this.clearAuthToken();
+        }
+
         throw new Error(errorMessage);
       }
 
@@ -124,16 +179,19 @@ class ApiClient {
       let errorMessage = 'Unknown API error occurred';
       
       // ✅ Handle specific error types
-      if (error.name === 'TimeoutError') {
-        errorMessage = 'Request timeout. The server is taking too long to respond.';
-      } else if (error.name === 'AbortError') {
-        errorMessage = 'Request was aborted.';
+      if (error.name === 'AbortError') {
+        errorMessage = 'Request timeout. The server is taking too long to respond. Please try again.';
       } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
         errorMessage = 'Network error. Please check your internet connection and try again.';
       } else if (error.name === 'SyntaxError') {
         errorMessage = 'Invalid response from server. Please try again.';
       } else if (error instanceof Error) {
-        errorMessage = error.message;
+        // Handle [object Object] specifically
+        if (error.message === '[object Object]' || error.message.includes('[object Object]')) {
+          errorMessage = 'Operation failed. Please check your input and try again.';
+        } else {
+          errorMessage = error.message;
+        }
       }
 
       console.error("🎯 Throwing clean error:", errorMessage);
@@ -174,6 +232,31 @@ class ApiClient {
     return this.request<ApiResponse>("api/authentication/reset-password", {
       method: "POST",
       body: JSON.stringify(resetPasswordData),
+    });
+  }
+
+  // NEW VERIFICATION METHODS
+  // For signup verification
+  async verifySignupOtp(verificationCode: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>("api/authentication/verify-otp", {
+      method: "POST",
+      body: JSON.stringify({ verificationCode }),
+    });
+  }
+
+  // For password reset verification  
+  async verifyPasswordResetOtp(verificationCode: string, phoneNumber: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>("api/authentication/verify-password-reset-otp", {
+      method: "POST",
+      body: JSON.stringify({ verificationCode, phoneNumber }),
+    });
+  }
+
+  // Check if there's a specific endpoint for password reset verification
+  async checkVerificationCode(verificationCode: string, phoneNumber: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>("api/authentication/check-verification-code", {
+      method: "POST",
+      body: JSON.stringify({ verificationCode, phoneNumber }),
     });
   }
 
@@ -238,6 +321,22 @@ class ApiClient {
     });
   }
 
+  // Test connection method
+  async testConnection(): Promise<boolean> {
+    try {
+      console.log('🔍 Testing connection to:', this.baseUrl);
+      const response = await fetch(this.baseUrl, { 
+        method: 'GET',
+        signal: AbortSignal.timeout(5000) // 5 second timeout for connection test
+      });
+      console.log('🏥 Connection test result:', response.status);
+      return response.ok;
+    } catch (error) {
+      console.error('💥 Connection test failed:', error);
+      return false;
+    }
+  }
+
   // Generic methods
   async get<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: "GET" });
@@ -264,4 +363,3 @@ class ApiClient {
 
 export const apiClient = new ApiClient();
 export default ApiClient;
-

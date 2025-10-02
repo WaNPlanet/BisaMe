@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { apiClient, SignInData, SignUpData } from "@/lib/api";
+import OtpVerification from "./OtpVerification"; // Add this import
 
 export default function AuthCard() {
   const [isSignIn, setIsSignIn] = useState(true);
@@ -15,6 +16,10 @@ export default function AuthCard() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // NEW STATE FOR OTP FLOW
+  const [showOtpVerification, setShowOtpVerification] = useState(false);
+  const [verificationPhoneNumber, setVerificationPhoneNumber] = useState("");
 
   const countries = [
     { code: "GH", dialCode: "+233", flag: "https://flagcdn.com/w20/gh.png", name: "Ghana", shortName: "GH" },
@@ -24,6 +29,18 @@ export default function AuthCard() {
   ];
 
   const currentCountry = countries.find((c) => c.code === selectedCountry);
+
+  // NEW: Handle OTP verification success
+  const handleVerificationSuccess = () => {
+    console.log("✅ OTP verified successfully!");
+    window.location.href = "/dashboard";
+  };
+
+  // NEW: Handle back from OTP verification
+  const handleBackFromOtp = () => {
+    setShowOtpVerification(false);
+    setVerificationPhoneNumber("");
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,7 +70,7 @@ export default function AuthCard() {
         console.log("✅ Sign in successful");
         window.location.href = "/dashboard";
       } else {
-        // Sign Up
+        // Sign Up - UPDATED FOR OTP FLOW
         const signUpData: SignUpData = {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
@@ -71,14 +88,17 @@ export default function AuthCard() {
         console.log("📝 Attempting sign up:", signUpData);
         const response = await apiClient.signUp(signUpData);
 
+        // Store token immediately
         localStorage.setItem("auth_token", response.data.token);
-        console.log("✅ Sign up successful");
-        window.location.href = "/verify";
+        console.log("✅ Sign up successful - redirecting to OTP verification");
+
+        // Show OTP verification instead of redirecting
+        setVerificationPhoneNumber(fullPhoneNumber);
+        setShowOtpVerification(true);
       }
     } catch (err: unknown) {
       console.error("❌ Authentication error:", err);
       
-      // SIMPLE error handling - no complex logic
       let errorMessage = "Authentication failed";
       
       if (err instanceof Error) {
@@ -87,7 +107,6 @@ export default function AuthCard() {
         errorMessage = err;
       }
       
-      // If we still get [object Object], provide a clear message
       if (errorMessage.includes('[object Object]') || errorMessage === '[object Object]') {
         errorMessage = "Invalid phone number or password. Please check your credentials.";
       }
@@ -99,6 +118,17 @@ export default function AuthCard() {
   }
 
   const clearError = () => setError(null);
+
+  // NEW: Show OTP verification component when needed
+  if (showOtpVerification) {
+    return (
+      <OtpVerification
+        phoneNumber={verificationPhoneNumber}
+        onVerificationSuccess={handleVerificationSuccess}
+        onBack={handleBackFromOtp}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -236,11 +266,11 @@ export default function AuthCard() {
                 </label>
                 {isSignIn && (
                   <Link
-                    href="/forgotpassword"
-                    className="text-sm font-medium text-blue-400 hover:text-blue-500 transition-colors"
-                  >
-                    Forgot password?
-                  </Link>
+  href="/reset-password"  // Changed from "/forgotpassword"
+  className="text-sm font-medium text-blue-400 hover:text-blue-500 transition-colors"
+>
+  Forgot password?
+</Link>
                 )}
               </div>
               <div className="relative">
